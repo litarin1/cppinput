@@ -47,3 +47,8 @@ void ActionSet::set_callback(
 void ActionSet::set_callback_mode(const Actions action, const CallbackMode mode) {
     m_callback_modes[_cast(action)] = mode;
 }
+void ActionSet::reset_presses() {
+    for (auto& counter : m_presses)
+        counter = 0;
+    m_is_just.reset();
+}

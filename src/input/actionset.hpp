@@ -57,14 +57,6 @@ private:
     template <class T>
     using _array = std::array<T, actions_count>;
 
-private:
-    _array<BoundedCounter<unsigned char>> m_presses{};
-    _array<CallbackMode> m_callback_modes{};
-    _array<std::function<void(ActionState state, Actions action)>> m_callbacks{};
-    std::bitset<actions_count> m_is_just{};
-    // TODO: replace m_callback_states with CommandQueue ring buffer
-    // and method dispatch_callbacks()
-    // std::bitset<actions_count> m_callback_states{};
     struct _Command {
     private:
         std::function<void(ActionState state, Actions action)> m_cb{nullptr};
@@ -81,11 +73,19 @@ private:
         _Command(const std::function<void(ActionState state, Actions action)> cb,
                  const Actions action, const ActionState state);
     };
+
+private:
+    _array<BoundedCounter<unsigned char>> m_presses{};
+    _array<CallbackMode> m_callback_modes{};
+    _array<std::function<void(ActionState state, Actions action)>> m_callbacks{};
+    std::bitset<actions_count> m_is_just{};
     RingBuffer<_Command, 32> m_commandqueue{};
 
 public:
     void update_just() { m_is_just.reset(); }
     void dispatch_callbacks();
+    void reset_presses();
+
     constexpr bool _check_callback(const Actions action, const ActionState state) {
         using enum ActionState;
         switch (m_callback_modes[_cast(action)]) {
@@ -126,9 +126,6 @@ private:
     void _update(const Actions action, const bool press, const bool just);
 
 public:
-    // какая логика:
-    // 1. в m_is_just[] пишется только true, но учитывать его нельзя
-    // 2. just = m_presses[] == max/min
     void press(const Actions action);
     void release(const Actions action);
 
@@ -180,9 +177,7 @@ public:
             const std::function<void(ActionState state, Actions action)>& cb) {
             return set_callback(cb);
         }
-        ActionWrapper& operator<<(const CallbackMode mode) {
-            return set_callback_mode(mode);
-        }
+        ActionWrapper& operator<<(const CallbackMode mode) { return set_callback_mode(mode); }
 
         // better use ActionSet::operator[]
         constexpr ActionWrapper(ActionSet& set, Actions action) : m_set(set), m_id(action) {}

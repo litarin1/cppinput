@@ -2,7 +2,7 @@
 
 void Input::update_just() { m_actions.update_just(); }
 void Input::dispatch_callbacks() { m_actions.dispatch_callbacks(); }
-void Input::reset() {}
+void Input::reset() { m_actions.reset_presses(); }
 void Input::key_cb(const Key key, const ButtonState state, const int mods) {
     const Actions action = m_binds[_cast_enum(key)];
     if (action == Actions::ACTIONS_MAX) return;
